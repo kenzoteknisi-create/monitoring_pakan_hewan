@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pakan Kucing Online</title>
+<style>
+:root{--bg:#f4f5f7;--card:#fff;--tx:#1b1f24;--mut:#6b7280;--ac:#2563eb;--ok:#16a34a;--warn:#d97706;--bad:#dc2626;--ln:#e5e7eb}
+@media(prefers-color-scheme:dark){:root{--bg:#0f1115;--card:#181b21;--tx:#e8eaed;--mut:#9aa0a9;--ac:#60a5fa;--ok:#4ade80;--warn:#fbbf24;--bad:#f87171;--ln:#2a2f38}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px system-ui,sans-serif;padding:16px}
+.w{max-width:680px;margin:0 auto;display:grid;gap:12px}
+h1{font-size:20px;margin:4px 0 0}h2{font-size:15px;margin:0 0 10px}
+.sub{color:var(--mut);font-size:13px}
+.card{background:var(--card);border:1px solid var(--ln);border-radius:12px;padding:16px}
+.big{font-size:44px;font-weight:700;line-height:1}.u{font-size:18px;color:var(--mut)}
+.bar{height:10px;background:var(--ln);border-radius:6px;overflow:hidden;margin-top:12px}
+.bar>i{display:block;height:100%;width:0;background:var(--ac);transition:width .4s}
+.g{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.l{color:var(--mut);font-size:13px}.v{font-size:22px;font-weight:600;margin-top:2px}
+.chip{display:inline-block;padding:2px 10px;border-radius:99px;font-size:13px;font-weight:600;border:1px solid var(--ln)}
+.on{color:var(--ok);border-color:var(--ok)}.off{color:var(--bad);border-color:var(--bad)}
+label{display:block;font-size:13px;color:var(--mut);margin:10px 0 4px}
+input{width:100%;padding:10px;border:1px solid var(--ln);border-radius:8px;background:var(--bg);color:var(--tx);font:inherit}
+.row{display:flex;gap:8px;align-items:end}.row>div{flex:1}
+button{padding:10px 14px;border:1px solid var(--ln);border-radius:8px;background:var(--card);color:var(--tx);font:inherit;font-weight:600;cursor:pointer}
+button.p{background:var(--ac);border-color:var(--ac);color:#fff}
+button:active{transform:translateY(1px)}
+.btns{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+canvas{width:100%;height:140px;display:block}
+#msg{font-size:13px;color:var(--mut);min-height:18px}
+.hide{display:none}
+</style>
+</head>
+<body>
+<div class="w">
+
+<div id="login" class="card">
+  <h1>Pakan Kucing Online</h1>
+  <div class="sub">Masukkan data broker MQTT dan kunci perangkat. Disimpan hanya di browser ini.</div>
+  <label>Host broker</label><input id="h" value="broker.emqx.io" autocapitalize="off">
+  <label>Port WebSocket aman (wss)</label><input id="o" value="8084" inputmode="numeric">
+  <label>Username (kosongkan untuk broker publik)</label><input id="u" autocapitalize="off">
+  <label>Password (kosongkan untuk broker publik)</label><input id="p" type="password">
+  <label>ID perangkat (Bayu_1604_kucing)</label><input id="d" placeholder="kucing-ganti-ini-8f3k29xq" autocapitalize="off">
+  <label>Kunci perintah (Bayu@1604_Kucing)</label><input id="kk" type="password">
+  <div class="btns"><button class="p" id="go">Hubungkan</button></div>
+  <div id="lmsg" class="sub" style="margin-top:8px"></div>
+</div>
+
+<div id="app" class="hide">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+    <div><h1>Pemberi Pakan Kucing</h1><div class="sub" id="conn">Menghubungkan…</div></div>
+    <button id="out">Keluar</button>
+  </div>
+
+  <div class="card"><div class="l">Berat pakan di mangkuk</div>
+    <div><span class="big" id="b">–</span> <span class="u">g</span></div>
+    <div class="bar"><i id="pr"></i></div>
+    <div class="l" style="margin-top:6px">Target porsi: <span id="t">–</span> g</div></div>
+
+  <div class="g" style="margin-top:12px">
+    <div class="card"><div class="l">Alat</div><div class="v"><span class="chip" id="on">–</span></div></div>
+    <div class="card"><div class="l">Kucing</div><div class="v"><span class="chip" id="k">–</span></div></div>
+    <div class="card"><div class="l">Servo</div><div class="v"><span class="chip" id="s">–</span></div></div>
+    <div class="card"><div class="l">Jarak sensor</div><div class="v"><span id="dj">–</span> cm</div></div>
+  </div>
+
+  <div class="card" style="margin-top:12px"><div class="l">Berat sejak halaman dibuka (g)</div><canvas id="c" width="640" height="140"></canvas></div>
+
+  <div class="card" style="margin-top:12px">
+    <h2>Pengaturan</h2>
+    <div class="row"><div><label>Target porsi (g)</label><input id="sg" type="number" min="5" max="1000"></div><button data-c="g" data-i="sg">Atur</button></div>
+    <div class="row"><div><label>Jarak deteksi kucing (cm)</label><input id="sj" type="number" min="5" max="100"></div><button data-c="j" data-i="sj">Atur</button></div>
+    <div class="row"><div><label>Tunda tutup setelah kucing pergi (ms)</label><input id="sw" type="number" min="500" max="60000"></div><button data-c="w" data-i="sw">Atur</button></div>
+    <div class="row"><div><label>Batas maksimum servo terbuka (ms)</label><input id="sm" type="number" min="1000" max="60000"></div><button data-c="m" data-i="sm">Atur</button></div>
+    <div class="btns"><button class="p" id="save">Simpan ke alat</button>
+      <button id="auto">Mode otomatis: –</button></div>
+  </div>
+
+  <div class="card" style="margin-top:12px">
+    <h2>Kontrol &amp; kalibrasi</h2>
+    <div class="btns"><button id="open">Buka servo</button><button id="close">Tutup servo</button></div>
+    <div class="sub" style="margin-top:6px">Buka manual paling cocok dipakai saat mode otomatis dimatikan.</div>
+    <div class="btns" style="margin-top:14px"><button id="tare">Tare (mangkuk kosong)</button></div>
+    <div class="row"><div><label>Kalibrasi dengan beban standar (g)</label><input id="cal" type="number" value="100"></div><button id="calb">Kalibrasi</button></div>
+    <div class="sub" style="margin-top:6px">Urutan: kosongkan mangkuk → Tare → taruh beban → Kalibrasi → Simpan ke alat.</div>
+  </div>
+  <div id="msg"></div>
+</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/mqtt@5.3.4/dist/mqtt.min.js"></script>
+<script>
+var $=function(i){return document.getElementById(i)},cl=null,base='',H=[],last=null,dev='',key='';
+var K='pakan-kucing-login';
+function load(){try{var j=JSON.parse(localStorage.getItem(K)||'null');if(j){$('h').value=j.h;$('o').value=j.o;$('u').value=j.u;$('p').value=j.p;$('d').value=j.d;$('kk').value=j.k}}catch(e){}}
+function save(j){try{localStorage.setItem(K,JSON.stringify(j))}catch(e){}}
+function chip(e,on,a,b){e.textContent=on?a:b;e.className='chip '+(on?'on':'off')}
+function kirim(c){if(!cl||!cl.connected){$('msg').textContent='Belum tersambung ke broker.';return}
+  cl.publish(base+'/cmd',key+'|'+c);$('msg').textContent='Perintah dikirim: '+c}
+function setIfIdle(id,v){var e=$(id);if(document.activeElement!==e)e.value=v}
+function draw(){var c=$('c'),x=c.getContext('2d'),w=c.width,h=c.height;x.clearRect(0,0,w,h);
+ if(H.length<2)return;var mn=Math.min.apply(0,H),mx=Math.max.apply(0,H);if(mx-mn<10){mx+=5;mn-=5}
+ x.strokeStyle=getComputedStyle(document.body).getPropertyValue('--ac');x.lineWidth=2;x.beginPath();
+ H.forEach(function(v,i){var X=i/(H.length-1)*(w-8)+4,Y=h-6-(v-mn)/(mx-mn)*(h-12);i?x.lineTo(X,Y):x.moveTo(X,Y)});x.stroke()}
+function show(j){
+ $('b').textContent=j.berat.toFixed(1);$('t').textContent=j.target.toFixed(0);
+ $('pr').style.width=Math.max(0,Math.min(100,j.berat/j.target*100))+'%';
+ $('dj').textContent=j.d<0?'tidak ada echo':j.d.toFixed(1);
+ chip($('k'),j.kucing,'Kucing dekat','Tidak ada');chip($('s'),j.servo,'Terbuka','Tertutup');
+ setIfIdle('sg',j.target);setIfIdle('sj',j.jarak);setIfIdle('sw',j.tunda);setIfIdle('sm',j.maks);
+ $('auto').textContent='Mode otomatis: '+(j.auto?'ON':'OFF');$('auto').dataset.on=j.auto?1:0;
+ H.push(j.berat);if(H.length>150)H.shift();draw()}
+function connect(h,o,u,p,d,k){
+ dev=d;key=k;base='pakan/'+d;$('lmsg').textContent='Menghubungkan…';
+ if(cl){try{cl.end(true)}catch(e){}}
+ var op={clientId:'web-'+Math.random().toString(16).slice(2,8),reconnectPeriod:3000,connectTimeout:10000};if(u){op.username=u;op.password=p}
+ cl=mqtt.connect('wss://'+h+':'+o+'/mqtt',op);
+ cl.on('connect',function(){
+  $('login').classList.add('hide');$('app').classList.remove('hide');
+  $('conn').textContent='Tersambung ke broker • perangkat: '+d;
+  cl.subscribe(base+'/status');cl.subscribe(base+'/online');save({h:h,o:o,u:u,p:p,d:d,k:k})});
+ cl.on('message',function(t,m){var s=m.toString();
+  if(t===base+'/online'){chip($('on'),s==='online','Online','Offline')}
+  else if(t===base+'/status'){try{show(JSON.parse(s))}catch(e){}}});
+ cl.on('error',function(e){$('lmsg').textContent='Gagal: '+(e&&e.message||e)+' (periksa host, port, dan kredensial)'});
+ cl.on('close',function(){$('conn').textContent='Terputus dari broker, mencoba lagi…'})}
+$('go').onclick=function(){var h=$('h').value.trim(),o=$('o').value.trim(),u=$('u').value.trim(),p=$('p').value,d=$('d').value.trim(),k=$('kk').value;
+ if(!h||!o||!d||!k){$('lmsg').textContent='Isi host, port, ID perangkat, dan kunci perintah.';return}connect(h,o,u,p,d,k)};
+$('out').onclick=function(){try{localStorage.removeItem(K)}catch(e){}if(cl)cl.end(true);location.reload()};
+document.querySelectorAll('button[data-c]').forEach(function(b){b.onclick=function(){
+ var v=$(b.dataset.i).value;if(v==='')return;kirim(b.dataset.c+' '+v)}});
+$('save').onclick=function(){kirim('s')};
+$('auto').onclick=function(){kirim('a '+($('auto').dataset.on==='1'?0:1))};
+$('open').onclick=function(){kirim('o 1')};$('close').onclick=function(){kirim('o 0')};
+$('tare').onclick=function(){if(confirm('Pastikan mangkuk KOSONG. Lanjutkan tare?'))kirim('t')};
+$('calb').onclick=function(){var g=$('cal').value;if(g>0&&confirm('Pastikan beban '+g+' g sudah di mangkuk. Kalibrasi?'))kirim('k '+g)};
+load();
+if($('h').value&&$('o').value&&$('d').value&&$('kk').value)connect($('h').value.trim(),$('o').value.trim(),$('u').value.trim(),$('p').value,$('d').value.trim(),$('kk').value);
+</script>
+</body>
+</html>
